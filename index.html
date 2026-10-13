@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBite| Online Food Ordering</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #ff4757;
+            color: white;
+            padding: 1rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .cart-btn {
+            background: white;
+            color: #ff4757;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .cart-btn:hover { background: #ffe0e3; }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            padding: 4rem 1rem;
+        }
+
+        .hero-section h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .filter-btn {
+            padding: 8px 18px;
+            border: 1px solid #ff4757;
+            background: white;
+            color: #ff4757;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: #ff4757;
+            color: white;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: 2.5fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Food Grid */
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .food-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .food-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .food-details { padding: 1rem; }
+        .food-details h4 { margin-bottom: 5px; }
+        .price { color: #2ed573; font-weight: bold; margin-bottom: 10px; }
+
+        .add-btn {
+            width: 100%;
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Sidebar Cart */
+        .cart-sidebar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            height: fit-content;
+            position: sticky;
+            top: 90px;
+        }
+
+        .cart-items {
+            max-height: 250px;
+            overflow-y: auto;
+            margin: 1rem 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .qty-btn {
+            background: #eee;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .summary-line.total { font-weight: bold; font-size: 1.1rem; color: #ff4757; }
+
+        .checkout-btn {
+            width: 100%;
+            background: #2ed573;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px; right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #2ed573;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .app-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <div class="logo">
+            <h2>🍕 QuickBite</h2>
+        </div>
+        <div class="nav-actions">
+            <button class="cart-btn" onclick="scrollToCart()">
+                🛒 Cart (<span id="cart-count">0</span>)
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>Fresh & Hot Food Delivered To Your Doorstep</h1>
+            <p>Order from your favorite restaurants in seconds.</p>
+        </div>
+    </section>
+
+    <!-- Main Content Container -->
+    <main class="main-container">
+        <!-- Category Filters -->
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filterMenu('All', event)">All</button>
+            <button class="filter-btn" onclick="filterMenu('Pizza', event)">Pizza</button>
+            <button class="filter-btn" onclick="filterMenu('Burger', event)">Burger</button>
+            <button class="filter-btn" onclick="filterMenu('Main Course', event)">Main Course</button>
+            <button class="filter-btn" onclick="filterMenu('Beverages', event)">Beverages</button>
+        </div>
+
+        <div class="app-layout">
+            <!-- Food Menu Grid -->
+            <section class="menu-section">
+                <h3>Our Specials Menu</h3>
+                <div class="food-grid" id="food-grid"></div>
+            </section>
+
+            <!-- Sticky Cart Sidebar -->
+            <aside class="cart-sidebar" id="cart-sidebar">
+                <h3>Order Summary</h3>
+                <div class="cart-items" id="cart-items">
+                    <p class="empty-msg">Your cart is empty.</p>
+                </div>
+                <div class="cart-summary">
+                    <div class="summary-line">
+                        <span>Item Total:</span>
+                        <span id="subtotal">₹0</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Delivery Fee:</span>
+                        <span id="delivery-fee">₹40</span>
+                    </div>
+                    <hr>
+                    <div class="summary-line total" style="margin-top: 8px;">
+                        <span>Grand Total:</span>
+                        <span id="grand-total">₹0</span>
+                    </div>
+                    <button class="checkout-btn" onclick="openCheckoutModal()">Proceed to Checkout</button>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Checkout Modal -->
+    <div class="modal" id="checkout-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCheckoutModal()">&times;</span>
+            <h2>Complete Your Order</h2>
+            <form id="checkout-form" onsubmit="handleOrderSubmission(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="cust-name" placeholder="Enter name" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="cust-phone" placeholder="9876543210" required>
+                </div>
+                <div class="form-group">
+                    <label>Delivery Address</label>
+                    <textarea id="cust-address" rows="3" placeholder="Enter complete address..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <select id="payment-mode">
+                        <option value="COD">Cash on Delivery (COD)</option>
+                        <option value="UPI">UPI / GPay / PhonePe</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Confirm Order</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Food Items Dataset
+        const foodItems = [
+            { id: 1, name: "Paneer Butter Masala", category: "Main Course", price: 240, image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=500&q=80" },
+            { id: 2, name: "Cheese Burst Pizza", category: "Pizza", price: 349, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80" },
+            { id: 3, name: "Double Patty Burger", category: "Burger", price: 149, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80" },
+            { id: 4, name: "Cold Coffee", category: "Beverages", price: 99, image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=500&q=80" },
+            { id: 5, name: "Dal Makhani & Naan", category: "Main Course", price: 210, image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=500&q=80" },
+            { id: 6, name: "Veg Supreme Pizza", category: "Pizza", price: 299, image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80" }
+        ];
+
+        let cart = JSON.parse(localStorage.getItem("food_cart")) || [];
+
+        // Render Menu Cards
+        function renderMenu(items) {
+            const grid = document.getElementById("food-grid");
+            grid.innerHTML = "";
+            
+            items.forEach(item => {
+                grid.innerHTML += `
+                    <div class="food-card">
+                        <img src="${item.image}" alt="${item.name}">
+                        <div class="food-details">
+                            <h4>${item.name}</h4>
+                            <p class="price">₹${item.price}</p>
+                            <button class="add-btn" onclick="addToCart(${item.id})">Add to Cart</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Category Filter Logic
+        function filterMenu(category, e) {
+            const buttons = document.querySelectorAll(".filter-btn");
+            buttons.forEach(btn => btn.classList.remove("active"));
+            if (e) e.target.classList.add("active");
+
+            if (category === "All") {
+                renderMenu(foodItems);
+            } else {
+                const filtered = foodItems.filter(item => item.category === category);
+                renderMenu(filtered);
+            }
+        }
+
+        // Cart Management
+        function addToCart(id) {
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                const item = foodItems.find(f => f.id === id);
+                cart.push({ ...item, qty: 1 });
+            }
+            updateCartUI();
+        }
+
+        function updateQty(id, change) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.qty += change;
+                if (item.qty <= 0) {
+                    cart = cart.filter(i => i.id !== id);
+                }
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            localStorage.setItem("food_cart", JSON.stringify(cart));
+            
+            const cartContainer = document.getElementById("cart-items");
+            const cartCount = document.getElementById("cart-count");
+            const subtotalEl = document.getElementById("subtotal");
+            const grandTotalEl = document.getElementById("grand-total");
+
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            cartCount.innerText = totalQty;
+
+            if (cart.length === 0) {
+                cartContainer.innerHTML = `<p class="empty-msg">Your cart is empty.</p>`;
+                subtotalEl.innerText = "₹0";
+                grandTotalEl.innerText = "₹0";
+                return;
+            }
+
+            cartContainer.innerHTML = "";
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                subtotal += item.price * item.qty;
+                cartContainer.innerHTML += `
+                    <div class="cart-item">
+                        <div>
+                            <div><strong>${item.name}</strong></div>
+                            <small>₹${item.price} × ${item.qty}</small>
+                        </div>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                            <span>${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const deliveryFee = 40;
+            subtotalEl.innerText = `₹${subtotal}`;
+            grandTotalEl.innerText = `₹${subtotal + deliveryFee}`;
+        }
+
+        // Modal Trigger Controls
+        function openCheckoutModal() {
+            if (cart.length === 0) return alert("Please add food items to your cart first!");
+            document.getElementById("checkout-modal").style.display = "flex";
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById("checkout-modal").style.display = "none";
+        }
+
+        function handleOrderSubmission(e) {
+            e.preventDefault();
+            const name = document.getElementById("cust-name").value;
+            alert(`Order Confirmed for ${name}! Will arrive in 30 minutes.`);
+            
+            cart = [];
+            updateCartUI();
+            closeCheckoutModal();
+        }
+
+        function scrollToCart() {
+            document.getElementById("cart-sidebar").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initial Run
+        document.addEventListener("DOMContentLoaded", () => {
+            renderMenu(foodItems);
+            updateCartUI();
+        });
+    </script>
+</body>
+</html>
